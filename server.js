@@ -1,47 +1,63 @@
+// server.js
 const express = require('express');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
-const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
-const upload = multer();
-app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+const upload = multer({ dest: 'uploads/' });
+
+// 🔧 Add middleware to parse JSON/form data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.post('/send-pdf', upload.single('pdf'), async (req, res) => {
   try {
+    const filePath = req.file.path;
+    console.log('📥 Received PDF file:', filePath);
+
+    // ✅ Replace with your actual Gmail + App Password
     const transporter = nodemailer.createTransport({
-      service: 'hotmail',
+      service: 'gmail',
       auth: {
-        user: 'YOUR_EMAIL@hotmail.com',
-        pass: 'YOUR_PASSWORD',
+        user: 'your_email@gmail.com',   // 🔁 Replace this
+        pass: 'your_app_password_here', // 🔁 Replace this
       },
     });
 
-    const mailOptions = {
-      from: 'YOUR_EMAIL@hotmail.com',
-      to: 'YOUR_EMAIL@hotmail.com',
-      subject: 'New Mortality PDF',
-      text: 'A new mortality PDF is attached.',
+    // Optional: Verify email transporter
+    await transporter.verify();
+    console.log("✅ Email transporter is ready.");
+
+    const info = await transporter.sendMail({
+      from: 'your_email@gmail.com', // 🔁 Replace this
+      to: 'your_email@gmail.com',   // 🔁 Or make dynamic
+      subject: 'Mortality PDF Report',
+      text: 'PDF report is attached.',
       attachments: [
         {
-          filename: 'report.pdf',
-          content: req.file.buffer,
+          filename: 'mortality_report.pdf',
+          path: filePath,
         },
       ],
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
-    res.status(200).send('Email sent!');
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Failed to send email.');
+    console.log("✅ Mail sent:", info.response);
+
+    // Delete file after sending
+    fs.unlinkSync(filePath);
+    res.send('✅ PDF sent!');
+  } catch (err) {
+    console.error("❌ Error in sending PDF:", err);
+    res.status(500).send('Failed to send.');
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('PDF Mailer Backend is working!');
-});
-
+// ✅ Use the dynamic Render-assigned port
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Server ready on port ${PORT}`);
+});
