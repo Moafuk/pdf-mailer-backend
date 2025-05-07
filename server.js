@@ -10,9 +10,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const upload = multer({ dest: 'uploads/' });
 
-// 🔧 Add middleware to parse JSON/form data
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.post('/send-pdf', upload.single('pdf'), async (req, res) => {
   try {
