@@ -9,6 +9,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const upload = multer({ dest: 'uploads/' });
+app.get('/', (req, res) => {
+  res.send('Server is running!');
+});
+
 
 
 app.post('/send-pdf', upload.single('pdf'), async (req, res) => {
@@ -16,12 +20,13 @@ app.post('/send-pdf', upload.single('pdf'), async (req, res) => {
     const filePath = req.file.path;
     console.log('📥 Received PDF file:', filePath);
 
-    // ✅ Replace with your actual Gmail + App Password
+    require('dotenv').config();
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'your_email@gmail.com',   // 🔁 Replace this
-        pass: 'your_app_password_here', // 🔁 Replace this
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
       },
     });
 
